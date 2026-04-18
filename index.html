@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STUDIO · Unified Producer Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #e8e4db;
+  --bg-panel: #f5f2ea;
+  --ink: #1a1814;
+  --ink-soft: #6b6558;
+  --ink-faint: #a8a195;
+  --rule: #d4cfc2;
+  --rule-soft: #e0dccf;
+  --accent: #c8341f;
+  --accent-dim: #9a281a;
+  --chip: #ebe6d9;
+  --chip-hover: #e1dbcb;
+  --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 2px 8px rgba(60,50,30,0.06);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: "opsz" 14;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(200,52,31,0.04), transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(60,50,30,0.05), transparent 45%);
+}
+
+/* ============ MASTER HEADER ============ */
+.master {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--rule);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+}
+
+.master-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 18px 32px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 40px;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.brand-mark {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: "opsz" 144;
+  font-weight: 700;
+  font-style: italic;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.brand-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-left: 1px solid var(--rule);
+  padding-left: 14px;
+}
+
+.master-controls {
+  display: flex;
+  gap: 0;
+  justify-content: center;
+}
+
+.master-field {
+  display: flex;
+  flex-direction: column;
+  padding: 0 32px;
+  border-left: 1px solid var(--rule);
+  min-width: 180px;
+}
+.master-field:first-child { border-left: none; }
+
+.master-field label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+
+.master-field .value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.master-field select,
+.master-field input {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: "opsz" 48;
+  font-weight: 500;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+}
+
+.master-field input[type="number"] {
+  -moz-appearance: textfield;
+  cursor: text;
+}
+.master-field input::-webkit-outer-spin-button,
+.master-field input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.master-field .unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200,52,31,0.15);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 3px rgba(200,52,31,0.15); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 5px rgba(200,52,31,0.08); }
+}
+
+/* ============ PAGE LAYOUT ============ */
+.stage {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.panel-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--rule);
+  background: linear-gradient(180deg, #faf7ef 0%, var(--bg-panel) 100%);
+}
+
+.panel-index {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+
+.panel-title {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.panel-title h2 {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: "opsz" 72;
+  font-weight: 500;
+  font-style: italic;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.panel-title .sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.panel-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: flex;
+  gap: 20px;
+}
+
+.panel-meta span b {
+  color: var(--ink);
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.panel-body {
+  display: grid;
+}
+
+/* ============ KEY PANEL ============ */
+.key-panel .panel-body {
+  grid-template-columns: 320px 1fr;
+  min-height: 380px;
+}
+
+.key-sidebar {
+  padding: 24px 28px;
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.scale-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.note-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 8px 12px;
+  background: var(--chip);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--ink);
+  transition: all 0.12s ease;
+  min-width: 48px;
+  text-align: center;
+}
+
+.note-chip:hover {
+  background: var(--chip-hover);
+  border-color: var(--ink-faint);
+}
+
+.note-chip.active {
+  background: var(--ink);
+  color: var(--bg-panel);
+  border-color: var(--ink);
+}
+
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 8px;
+}
+
+.chord-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.chord-btn {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: "opsz" 24;
+  font-weight: 500;
+  font-size: 14px;
+  background: var(--chip);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink);
+  transition: all 0.12s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.chord-btn .roman {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+}
+
+.chord-btn:hover {
+  background: var(--chip-hover);
+  border-color: var(--ink-faint);
+}
+
+.chord-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.chord-btn.active .roman {
+  color: rgba(255,255,255,0.7);
+}
+
+.canvas-wrap {
+  position: relative;
+  min-height: 380px;
+}
+
+.canvas-wrap canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ============ DUAL PANEL ROW ============ */
+.dual-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1100px) {
+  .dual-row { grid-template-columns: 1fr; }
+  .key-panel .panel-body { grid-template-columns: 1fr; }
+  .key-sidebar { border-right: none; border-bottom: 1px solid var(--rule); }
+}
+
+/* ============ COMPRESSION PANEL ============ */
+.comp-panel .panel-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 360px;
+}
+
+.comp-controls {
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.division-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 8px 14px;
+  background: var(--chip);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--ink);
+  transition: all 0.12s ease;
+  text-transform: uppercase;
+}
+
+.division-chip:hover { background: var(--chip-hover); border-color: var(--ink-faint); }
+.division-chip.active { background: var(--ink); color: var(--bg-panel); border-color: var(--ink); }
+
+.comp-canvas-wrap {
+  position: relative;
+  min-height: 280px;
+}
+
+.comp-readout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--rule);
+}
+
+.readout-cell {
+  padding: 18px 28px;
+  border-left: 1px solid var(--rule);
+}
+.readout-cell:first-child { border-left: none; }
+
+.readout-cell .label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+
+.readout-cell .val {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: "opsz" 72;
+  font-weight: 500;
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.readout-cell .val .u {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+}
+
+/* ============ FREQUENCY PANEL ============ */
+.freq-panel .panel-body {
+  grid-template-columns: 1fr;
+  min-height: 360px;
+}
+
+.freq-canvas-wrap {
+  position: relative;
+  min-height: 280px;
+}
+
+.freq-list {
+  border-top: 1px solid var(--rule);
+  padding: 14px 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.freq-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 8px 14px;
+  border-right: 1px solid var(--rule-soft);
+  color: var(--ink-soft);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.freq-item:last-child { border-right: none; }
+
+.freq-item .n {
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.freq-item .hz {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ============ FOOTER ============ */
+.foot {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 20px 32px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.foot .divider {
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+  margin: 0 24px;
+}
+</style>
+</head>
+<body>
+
+<!-- ============ MASTER HEADER ============ -->
+<header class="master">
+  <div class="master-inner">
+    <div class="brand">
+      <div class="brand-mark">Studio</div>
+      <div class="brand-sub">Unified Console · v1.0</div>
+    </div>
+
+    <div class="master-controls">
+      <div class="master-field">
+        <label>Key · Root</label>
+        <div class="value">
+          <select id="master-key">
+            <option value="C">C Major</option>
+            <option value="C#">C♯ / D♭ Major</option>
+            <option value="D">D Major</option>
+            <option value="D#">D♯ / E♭ Major</option>
+            <option value="E">E Major</option>
+            <option value="F">F Major</option>
+            <option value="F#">F♯ / G♭ Major</option>
+            <option value="G" selected>G Major</option>
+            <option value="G#">G♯ / A♭ Major</option>
+            <option value="A">A Major</option>
+            <option value="A#">A♯ / B♭ Major</option>
+            <option value="B">B Major</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="master-field">
+        <label>Tempo</label>
+        <div class="value">
+          <input id="master-bpm" type="number" min="40" max="240" step="1" value="127">
+          <span class="unit">BPM</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="status">
+      <span class="status-dot"></span>
+      <span>Session Locked</span>
+    </div>
+  </div>
+</header>
+
+<main class="stage">
+
+  <!-- ============ PANEL 01 · KEY ============ -->
+  <section class="panel key-panel">
+    <div class="panel-head">
+      <div class="panel-index">01 / KEY</div>
+      <div class="panel-title">
+        <h2>Harmonic Anchor</h2>
+        <span class="sub">Scale & Diatonic Chords</span>
+      </div>
+      <div class="panel-meta">
+        <span>Root <b id="meta-root">G</b></span>
+        <span>Selected <b id="meta-selected">G</b></span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="key-sidebar">
+        <div>
+          <div class="section-label">Scale Degrees · tap to route</div>
+          <div class="scale-notes" id="scale-notes"></div>
+        </div>
+        <div>
+          <div class="section-label">Diatonic Triads</div>
+          <div class="chord-grid" id="chord-grid"></div>
+        </div>
+      </div>
+      <div class="canvas-wrap" id="piano-wrap"></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 02 + 03 ROW ============ -->
+  <div class="dual-row">
+
+    <!-- ===== COMPRESSION ===== -->
+    <section class="panel comp-panel">
+      <div class="panel-head">
+        <div class="panel-index">02 / TIME</div>
+        <div class="panel-title">
+          <h2>Tempo Sync</h2>
+          <span class="sub">Compressor Timing</span>
+        </div>
+        <div class="panel-meta">
+          <span>BPM <b id="meta-bpm">127</b></span>
+        </div>
+      </div>
+      <div class="comp-controls" id="division-controls">
+        <button class="division-chip" data-div="1">¼ Quarter</button>
+        <button class="division-chip active" data-div="0.5">⅛ Eighth</button>
+        <button class="division-chip" data-div="0.25">1/16</button>
+        <button class="division-chip" data-div="0.125">1/32</button>
+        <button class="division-chip" data-div="0.75">Dotted ⅛</button>
+        <button class="division-chip" data-div="0.333">Triplet ⅛</button>
+      </div>
+      <div class="comp-canvas-wrap" id="comp-wrap"></div>
+      <div class="comp-readout">
+        <div class="readout-cell">
+          <div class="label">Ideal Attack</div>
+          <div class="val"><span id="comp-atk">—</span><span class="u">ms</span></div>
+        </div>
+        <div class="readout-cell">
+          <div class="label">Ideal Release</div>
+          <div class="val"><span id="comp-rel">—</span><span class="u">ms</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FREQUENCY ===== -->
+    <section class="panel freq-panel">
+      <div class="panel-head">
+        <div class="panel-index">03 / SPECTRUM</div>
+        <div class="panel-title">
+          <h2>Frequency Map</h2>
+          <span class="sub">ISO Band Reference</span>
+        </div>
+        <div class="panel-meta">
+          <span>Tracking <b id="meta-freq-note">G</b></span>
+        </div>
+      </div>
+      <div class="freq-canvas-wrap" id="freq-wrap"></div>
+      <div class="freq-list" id="freq-list"></div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="foot">
+  <span>© Studio Console</span>
+  <div class="divider"></div>
+  <span>A = 440 Hz · Equal Temperament</span>
+</footer>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ============================================================
+   SHARED STATE — single source of truth
+   ============================================================ */
+const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const MAJOR_INTERVALS = [0,2,4,5,7,9,11];
+const CHORD_TYPES = ['Major','minor','minor','Major','Major','minor','dim'];
+const ROMAN = ['I','ii','iii','IV','V','vi','vii°'];
+const ISO_BANDS = [20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000];
+
+const state = {
+  key: 'G',
+  bpm: 127,
+  selectedNote: 'G',         // which scale note is highlighted in EQ
+  selectedChord: null,       // {root, type} — or null if single-note mode
+  division: 0.5
+};
+
+const listeners = [];
+function subscribe(fn) { listeners.push(fn); }
+function emit() { listeners.forEach(fn => fn(state)); }
+
+function scaleNotes(root) {
+  const idx = NOTES.indexOf(root);
+  return MAJOR_INTERVALS.map(i => NOTES[(idx + i) % 12]);
+}
+function chordNotes(root, type) {
+  const idx = NOTES.indexOf(root);
+  const intervals = type === 'Major' ? [0,4,7] : type === 'minor' ? [0,3,7] : [0,3,6];
+  return intervals.map(i => NOTES[(idx + i) % 12]);
+}
+function noteFreqs(noteName, minHz = 20, maxHz = 20000) {
+  const rootIdx = NOTES.indexOf(noteName);
+  const out = [];
+  for (let oct = 0; oct <= 8; oct++) {
+    const midi = (oct + 1) * 12 + rootIdx;
+    const f = 440 * Math.pow(2, (midi - 69) / 12);
+    if (f >= minHz && f <= maxHz) out.push({ note: noteName + oct, freq: f });
+  }
+  return out;
+}
+
+/* ============================================================
+   SIDEBAR — scale chips + chord grid
+   ============================================================ */
+const scaleNotesEl = document.getElementById('scale-notes');
+const chordGridEl = document.getElementById('chord-grid');
+
+function renderSidebar() {
+  const scale = scaleNotes(state.key);
+
+  // scale chips
+  scaleNotesEl.innerHTML = '';
+  scale.forEach((n, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'note-chip' + (n === state.selectedNote && !state.selectedChord ? ' active' : '');
+    chip.textContent = n;
+    chip.onclick = () => {
+      state.selectedNote = n;
+      state.selectedChord = null;
+      emit();
+    };
+    scaleNotesEl.appendChild(chip);
+  });
+
+  // chord grid
+  chordGridEl.innerHTML = '';
+  scale.forEach((n, i) => {
+    const btn = document.createElement('button');
+    const type = CHORD_TYPES[i];
+    const isActive = state.selectedChord && state.selectedChord.root === n && state.selectedChord.type === type;
+    btn.className = 'chord-btn' + (isActive ? ' active' : '');
+    btn.innerHTML = `<span>${n} ${type === 'dim' ? 'dim' : type}</span><span class="roman">${ROMAN[i]}</span>`;
+    btn.onclick = () => {
+      state.selectedChord = { root: n, type };
+      state.selectedNote = n;
+      emit();
+    };
+    chordGridEl.appendChild(btn);
+  });
+
+  document.getElementById('meta-root').textContent = state.key;
+  document.getElementById('meta-selected').textContent = state.selectedChord
+    ? `${state.selectedChord.root} ${state.selectedChord.type === 'dim' ? 'dim' : state.selectedChord.type}`
+    : state.selectedNote;
+  document.getElementById('meta-freq-note').textContent = state.selectedNote;
+}
+subscribe(renderSidebar);
+
+/* ============================================================
+   PANEL 01 — PIANO (top-down, 2 octaves)
+   ============================================================ */
+function buildPiano() {
+  const wrap = document.getElementById('piano-wrap');
+  const scene = new THREE.Scene();
+  scene.background = null;
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  wrap.appendChild(renderer.domElement);
+
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 1000);
+  camera.position.set(0, 22, 0.001);
+  camera.lookAt(0, 0, 0);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xe8e4db, 1.8));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+  dir.position.set(5, 15, 5);
+  scene.add(dir);
+
+  const keyMeshes = [];
+  const keysGroup = new THREE.Group();
+
+  const whiteW = 1.0, whiteH = 5.0, spacing = 1.05;
+  let xPos = -7.5;
+  const NUM_KEYS = 24; // two octaves
+
+  for (let i = 0; i < NUM_KEYS; i++) {
+    const noteName = NOTES[i % 12];
+    const isSharp = noteName.includes('#');
+    if (!isSharp) {
+      const geo = new THREE.BoxGeometry(whiteW, 0.4, whiteH);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0xf5f2ea, roughness: 0.55, metalness: 0.0
+      });
+      const key = new THREE.Mesh(geo, mat);
+      key.position.set(xPos, 0, 0);
+      key.userData = { note: noteName, isSharp: false, baseY: 0, baseColor: 0xf5f2ea };
+      keyMeshes.push(key);
+      keysGroup.add(key);
+      xPos += spacing;
+    } else {
+      const geo = new THREE.BoxGeometry(0.62, 0.7, 3.1);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x1a1814, roughness: 0.4, metalness: 0.0
+      });
+      const key = new THREE.Mesh(geo, mat);
+      key.position.set(xPos - spacing / 2, 0.35, -0.95);
+      key.userData = { note: noteName, isSharp: true, baseY: 0.35, baseColor: 0x1a1814 };
+      keyMeshes.push(key);
+      keysGroup.add(key);
+    }
+  }
+
+  keysGroup.position.set(0, 0, 0);
+  keysGroup.scale.set(0.78, 0.78, 0.78);
+  scene.add(keysGroup);
+
+  // subtle baseplate
+  const plateGeo = new THREE.BoxGeometry(15, 0.1, 5);
+  const plateMat = new THREE.MeshStandardMaterial({ color: 0xe0dccf, roughness: 0.9 });
+  const plate = new THREE.Mesh(plateGeo, plateMat);
+  plate.position.y = -0.25;
+  plate.scale.copy(keysGroup.scale);
+  scene.add(plate);
+
+  function update() {
+    const scale = scaleNotes(state.key);
+    const highlight = state.selectedChord
+      ? chordNotes(state.selectedChord.root, state.selectedChord.type)
+      : [state.selectedNote];
+
+    keyMeshes.forEach(k => {
+      const d = k.userData;
+      const inScale = scale.includes(d.note);
+      const isHigh = highlight.includes(d.note);
+
+      if (isHigh) {
+        k.material.color.setHex(0xc8341f);
+        k.position.y = d.baseY - 0.12;
+      } else if (inScale) {
+        // gently tinted for scale membership
+        k.material.color.setHex(d.isSharp ? 0x3a2420 : 0xf1d9cf);
+        k.position.y = d.baseY;
+      } else {
+        k.material.color.setHex(d.baseColor);
+        k.position.y = d.baseY;
+      }
+    });
+  }
+
+  subscribe(update);
+  update();
+
+  function resize() {
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    if (w === 0 || h === 0) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+
+  new ResizeObserver(resize).observe(wrap);
+  resize();
+
+  (function loop(){
+    requestAnimationFrame(loop);
+    renderer.render(scene, camera);
+  })();
+}
+
+/* ============================================================
+   PANEL 02 — COMPRESSOR GAUGES
+   ============================================================ */
+function buildComp() {
+  const wrap = document.getElementById('comp-wrap');
+  const scene = new THREE.Scene();
+  scene.background = null;
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  wrap.appendChild(renderer.domElement);
+
+  const d = 4.2;
+  const camera = new THREE.OrthographicCamera(-d, d, d * 0.6, -d * 0.6, 0.1, 100);
+  camera.position.set(0, 0, 10);
+
+  function textCanvas(text, size = 32, color = '#1a1814', weight = 700) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 512; canvas.height = 128;
+    ctx.clearRect(0, 0, 512, 128);
+    ctx.fillStyle = color;
+    ctx.font = `${weight} ${size}px "JetBrains Mono", monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 256, 64);
+    return new THREE.CanvasTexture(canvas);
+  }
+
+  function gauge(x, label) {
+    const g = new THREE.Group();
+    g.position.x = x;
+
+    // outer track
+    const track = new THREE.Mesh(
+      new THREE.RingGeometry(1.55, 1.6, 128, 1, Math.PI * 0.75, Math.PI * 1.5),
+      new THREE.MeshBasicMaterial({ color: 0xd4cfc2 })
+    );
+    g.add(track);
+
+    // tick marks around arc
+    for (let i = 0; i <= 10; i++) {
+      const t = i / 10;
+      const a = Math.PI * 0.75 + t * Math.PI * 1.5;
+      const len = (i % 5 === 0) ? 0.14 : 0.07;
+      const r1 = 1.45, r2 = 1.45 - len;
+      const tickGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(Math.cos(a) * r1, Math.sin(a) * r1, 0),
+        new THREE.Vector3(Math.cos(a) * r2, Math.sin(a) * r2, 0)
+      ]);
+      const tick = new THREE.Line(tickGeo, new THREE.LineBasicMaterial({ color: 0xa8a195 }));
+      g.add(tick);
+    }
+
+    // face
+    const face = new THREE.Mesh(
+      new THREE.CircleGeometry(1.25, 64),
+      new THREE.MeshBasicMaterial({ color: 0xf5f2ea })
+    );
+    g.add(face);
+
+    // inner ring
+    const innerRing = new THREE.Mesh(
+      new THREE.RingGeometry(1.24, 1.26, 64),
+      new THREE.MeshBasicMaterial({ color: 0xe0dccf })
+    );
+    g.add(innerRing);
+
+    // pivot + needle
+    const pivot = new THREE.Group();
+    const needleGeo = new THREE.BufferGeometry();
+    const needleShape = [
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(-0.04, 0.2, 0),
+      new THREE.Vector3(-0.015, 1.15, 0),
+      new THREE.Vector3(0.015, 1.15, 0),
+      new THREE.Vector3(0.04, 0.2, 0),
+      new THREE.Vector3(0, 0, 0)
+    ];
+    const shape = new THREE.Shape(needleShape.map(v => new THREE.Vector2(v.x, v.y)));
+    const shapeGeo = new THREE.ShapeGeometry(shape);
+    const needle = new THREE.Mesh(shapeGeo, new THREE.MeshBasicMaterial({ color: 0xc8341f }));
+    pivot.add(needle);
+
+    // center hub
+    const hub = new THREE.Mesh(
+      new THREE.CircleGeometry(0.13, 32),
+      new THREE.MeshBasicMaterial({ color: 0x1a1814 })
+    );
+    pivot.add(hub);
+    const hubRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.13, 0.16, 32),
+      new THREE.MeshBasicMaterial({ color: 0xc8341f })
+    );
+    pivot.add(hubRing);
+
+    g.add(pivot);
+
+    // label
+    const lbl = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: textCanvas(label, 28, '#a8a195', 500), transparent: true
+    }));
+    lbl.position.y = -0.55;
+    lbl.scale.set(2.4, 0.6, 1);
+    g.add(lbl);
+
+    scene.add(g);
+    return { pivot };
+  }
+
+  const atkG = gauge(-2.2, 'ATTACK · MS');
+  const relG = gauge(2.2, 'RELEASE · MS');
+
+  const offset = Math.PI * 0.75;
+  const span = Math.PI * 1.5;
+
+  // starting rotation so needles don't swing from 0
+  atkG.pivot.rotation.z = -Math.PI / 2 + offset;
+  relG.pivot.rotation.z = -Math.PI / 2 + offset;
+
+  function update() {
+    const msPerBeat = 60000 / state.bpm;
+    const noteMs = msPerBeat * state.division;
+    const rel = noteMs;
+    const atk = noteMs * 0.02;
+
+    const atkFactor = Math.min(atk / 50, 1);
+    const relFactor = Math.min(rel / 1000, 1);
+
+    atkG.targetRot = -Math.PI / 2 + offset - (atkFactor * span);
+    relG.targetRot = -Math.PI / 2 + offset - (relFactor * span);
+
+    document.getElementById('comp-atk').textContent = atk.toFixed(2);
+    document.getElementById('comp-rel').textContent = rel.toFixed(1);
+    document.getElementById('meta-bpm').textContent = state.bpm;
+  }
+  subscribe(update);
+  update();
+
+  function resize() {
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    if (w === 0 || h === 0) return;
+    const aspect = w / h;
+    const dd = 4.2;
+    camera.left = -dd * aspect * 0.5;
+    camera.right = dd * aspect * 0.5;
+    camera.top = dd * 0.55;
+    camera.bottom = -dd * 0.55;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+  }
+  new ResizeObserver(resize).observe(wrap);
+  resize();
+
+  (function loop(){
+    requestAnimationFrame(loop);
+    // smooth needle lerp
+    if (atkG.targetRot !== undefined) {
+      atkG.pivot.rotation.z = THREE.MathUtils.lerp(atkG.pivot.rotation.z, atkG.targetRot, 0.12);
+      relG.pivot.rotation.z = THREE.MathUtils.lerp(relG.pivot.rotation.z, relG.targetRot, 0.12);
+    }
+    renderer.render(scene, camera);
+  })();
+}
+
+/* ============================================================
+   PANEL 03 — FREQUENCY EQ (31 ISO bands)
+   ============================================================ */
+function buildFreq() {
+  const wrap = document.getElementById('freq-wrap');
+  const scene = new THREE.Scene();
+  scene.background = null;
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  wrap.appendChild(renderer.domElement);
+
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 1000);
+  camera.position.set(0, 1.5, 22);
+  camera.lookAt(0, 0, 0);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xe8e4db, 2.2));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.7);
+  dir.position.set(4, 10, 8);
+  scene.add(dir);
+
+  const eqGroup = new THREE.Group();
+
+  // chassis
+  const chassis = new THREE.Mesh(
+    new THREE.BoxGeometry(30, 6.5, 0.6),
+    new THREE.MeshStandardMaterial({ color: 0x1a1814, roughness: 0.45, metalness: 0.05 })
+  );
+  eqGroup.add(chassis);
+
+  // top inlay
+  const inlay = new THREE.Mesh(
+    new THREE.BoxGeometry(29.4, 5.9, 0.02),
+    new THREE.MeshStandardMaterial({ color: 0x24211c, roughness: 0.8 })
+  );
+  inlay.position.z = 0.31;
+  eqGroup.add(inlay);
+
+  const startX = -13.5;
+  const spacing = 0.93;
+  const faders = [];
+
+  // Create slots + knobs (labels come later via canvas sprites to avoid font load complexity)
+  ISO_BANDS.forEach((band, i) => {
+    const x = startX + i * spacing;
+
+    // slot track
+    const slot = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.08, 4.2),
+      new THREE.MeshBasicMaterial({ color: 0x0a0908 })
+    );
+    slot.position.set(x, 0.2, 0.32);
+    eqGroup.add(slot);
+
+    // small ticks at top/bottom of slot
+    for (let t = 0; t < 5; t++) {
+      const ty = -1.9 + t * 0.95;
+      const tick = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.32, 0.02),
+        new THREE.MeshBasicMaterial({ color: 0x3a3630 })
+      );
+      tick.position.set(x, ty + 0.2, 0.325);
+      eqGroup.add(tick);
+    }
+
+    // knob cap
+    const knobGeo = new THREE.BoxGeometry(0.5, 0.7, 0.45);
+    const knobMat = new THREE.MeshStandardMaterial({
+      color: 0xd4cfc2, roughness: 0.55, metalness: 0.1
+    });
+    const knob = new THREE.Mesh(knobGeo, knobMat);
+    knob.position.set(x, -1.6, 0.5);
+    knob.userData = { bandCenter: band, baseY: -1.6 };
+    faders.push(knob);
+    eqGroup.add(knob);
+
+    // knob indicator line
+    const line = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.3, 0.04),
+      new THREE.MeshBasicMaterial({ color: 0x1a1814 })
+    );
+    line.position.set(x, -1.6, 0.73);
+    knob.userData.indicator = line;
+    line.userData = { knob };
+    eqGroup.add(line);
+
+    // label (sprite)
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 32;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#a8a195';
+    ctx.font = '600 16px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const labelText = band >= 1000 ? (band / 1000) + 'k' : band.toString();
+    ctx.fillText(labelText, 64, 16);
+    const tex = new THREE.CanvasTexture(canvas);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+    sprite.position.set(x, -2.8, 0.4);
+    sprite.scale.set(1.2, 0.3, 1);
+    eqGroup.add(sprite);
+  });
+
+  scene.add(eqGroup);
+
+  function update() {
+    const highlightNotes = state.selectedChord
+      ? chordNotes(state.selectedChord.root, state.selectedChord.type)
+      : [state.selectedNote];
+
+    // collect all frequencies to highlight
+    const allFreqs = [];
+    highlightNotes.forEach(n => {
+      noteFreqs(n).forEach(nf => allFreqs.push(nf));
+    });
+
+    // reset
+    faders.forEach(f => {
+      f.position.y = f.userData.baseY;
+      f.material.color.setHex(0xd4cfc2);
+      f.userData.indicator.position.y = f.userData.baseY;
+    });
+
+    // raise closest fader for each frequency
+    allFreqs.forEach(item => {
+      let closest = faders[0];
+      let minDiff = Infinity;
+      faders.forEach(f => {
+        const diff = Math.abs(Math.log10(f.userData.bandCenter) - Math.log10(item.freq));
+        if (diff < minDiff) { minDiff = diff; closest = f; }
+      });
+      closest.position.y = 1.5;
+      closest.material.color.setHex(0xc8341f);
+      closest.userData.indicator.position.y = 1.5;
+    });
+
+    // populate list
+    const listEl = document.getElementById('freq-list');
+    listEl.innerHTML = '';
+    const displayFreqs = [];
+    highlightNotes.forEach(n => {
+      noteFreqs(n, 30, 12000).forEach(nf => displayFreqs.push(nf));
+    });
+    displayFreqs.sort((a, b) => a.freq - b.freq);
+    displayFreqs.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'freq-item';
+      div.innerHTML = `<span class="n">${item.note}</span><span class="hz">${item.freq.toFixed(1)} Hz</span>`;
+      listEl.appendChild(div);
+    });
+  }
+  subscribe(update);
+  update();
+
+  function resize() {
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    if (w === 0 || h === 0) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(wrap);
+  resize();
+
+  (function loop(){
+    requestAnimationFrame(loop);
+    renderer.render(scene, camera);
+  })();
+}
+
+/* ============================================================
+   MASTER CONTROLS
+   ============================================================ */
+document.getElementById('master-key').value = state.key;
+document.getElementById('master-key').addEventListener('change', e => {
+  state.key = e.target.value;
+  // reset selection to new root
+  state.selectedNote = state.key;
+  state.selectedChord = null;
+  emit();
+});
+
+const bpmInput = document.getElementById('master-bpm');
+bpmInput.value = state.bpm;
+bpmInput.addEventListener('input', e => {
+  const v = parseInt(e.target.value, 10);
+  if (!isNaN(v) && v >= 40 && v <= 240) {
+    state.bpm = v;
+    emit();
+  }
+});
+
+// division chips
+document.querySelectorAll('.division-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.division-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    state.division = parseFloat(chip.dataset.div);
+    emit();
+  });
+});
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+buildPiano();
+buildComp();
+buildFreq();
+renderSidebar();
+emit(); // initial broadcast
+</script>
+</body>
+</html>
