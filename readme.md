@@ -1,3 +1,6 @@
+LIVE VERSION - https://producer-tool.netlify.app/
+
+
 # Studio · Unified Producer Console
 
 A single-page browser tool that locks a producer's **key** and **tempo** to three synchronized reference panels — a piano scale/chord visualizer, a tempo-synced compressor timing calculator, and a note-frequency EQ map.
